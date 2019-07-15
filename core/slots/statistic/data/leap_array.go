@@ -32,6 +32,10 @@ type LeapArray struct {
 	mux              util.TriableMutex // lock
 }
 
+func (la *LeapArray) WindowLengthInMs() uint32 {
+	return la.windowLengthInMs
+}
+
 func (la *LeapArray) CurrentWindow(sw BucketGenerator) (*WindowWrap, error) {
 	return la.CurrentWindowWithTime(util.GetTimeMilli(), sw)
 }
@@ -145,7 +149,7 @@ func NewSlidingWindow(sampleCount uint32, intervalInMs uint32) *SlidingWindow {
 		panic(fmt.Sprintf("invalid parameters, intervalInMs is %d, sampleCount is %d.", intervalInMs, sampleCount))
 	}
 	winLengthInMs := intervalInMs / sampleCount
-	arr := make([]*WindowWrap, 5)
+	arr := make([]*WindowWrap, sampleCount)
 	return &SlidingWindow{
 		data: &LeapArray{
 			windowLengthInMs: winLengthInMs,
@@ -200,7 +204,6 @@ func (sw *SlidingWindow) AddCount(event MetricEventType, count uint64) {
 }
 
 func (sw *SlidingWindow) MaxSuccess() uint64 {
-
 	_, err := sw.data.CurrentWindow(sw)
 	if err != nil {
 		fmt.Println("sliding window fail to record success")
@@ -223,13 +226,12 @@ func (sw *SlidingWindow) MaxSuccess() uint64 {
 }
 
 func (sw *SlidingWindow) MinSuccess() uint64 {
-
 	_, err := sw.data.CurrentWindow(sw)
 	if err != nil {
 		fmt.Println("sliding window fail to record success")
 	}
 
-	succ := uint64(0)
+	succ := uint64(math.MaxUint64)
 	for _, ww := range sw.data.Values() {
 		mb, ok := ww.value.(*MetricBucket)
 		if !ok {
@@ -240,7 +242,39 @@ func (sw *SlidingWindow) MinSuccess() uint64 {
 		if err != nil {
 			fmt.Println("get success counter fail, reason: ", err)
 		}
-		succ = uint64(math.Min(float64(succ), float64(s)))
+		if s < succ {
+			succ = s
+		}
 	}
 	return succ
+}
+
+func (sw *SlidingWindow) MinRt() uint64 {
+	_, err := sw.data.CurrentWindow(sw)
+	if err != nil {
+		fmt.Println("sliding window fail to record success")
+	}
+
+	min := uint64(math.MaxUint64)
+	for _, ww := range sw.data.Values() {
+		mb, ok := ww.value.(*MetricBucket)
+		if !ok {
+			fmt.Println("assert fail")
+			continue
+		}
+		s := mb.MinRt()
+		if s < min {
+			min = s
+		}
+	}
+
+	return min
+}
+
+func (sw *SlidingWindow) WindowLengthInMs() uint32 {
+	return sw.data.windowLengthInMs
+}
+
+func (sw *SlidingWindow) WindowLengthInSec() float64 {
+	return float64(sw.data.windowLengthInMs / 1000.0)
 }
