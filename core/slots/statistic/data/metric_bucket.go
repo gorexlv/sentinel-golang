@@ -38,6 +38,11 @@ func (mb *MetricBucket) Add(event MetricEventType, count uint64) {
 	if event > metricEventNum {
 		panic("event is bigger then metricEventNum")
 	}
+	if event == MetricEventRt {
+		if count < mb.minRt {
+			mb.minRt = count
+		}
+	}
 	atomic.AddUint64(&mb.counters[event], count)
 }
 
@@ -50,55 +55,4 @@ func (mb *MetricBucket) Get(event MetricEventType) uint64 {
 
 func (mb *MetricBucket) MinRt() uint64 {
 	return mb.minRt
-}
-
-func (mb *MetricBucket) Reset() {
-	for i := 0; i < int(metricEventNum); i++ {
-		atomic.StoreUint64(&mb.counters[i], 0)
-	}
-	atomic.StoreUint64(&mb.minRt, math.MaxUint64)
-}
-
-func (mb *MetricBucket) AddPass(n uint64) {
-	mb.Add(MetricEventPass, n)
-}
-
-func (mb *MetricBucket) Pass() uint64 {
-	return mb.Get(MetricEventPass)
-}
-
-func (mb *MetricBucket) AddBlock(n uint64) {
-	mb.Add(MetricEventBlock, n)
-}
-
-func (mb *MetricBucket) Block() uint64 {
-	return mb.Get(MetricEventBlock)
-}
-
-func (mb *MetricBucket) AddSuccess(n uint64) {
-	mb.Add(MetricEventSuccess, n)
-}
-
-func (mb *MetricBucket) Success() uint64 {
-	return mb.Get(MetricEventSuccess)
-}
-
-func (mb *MetricBucket) AddError(n uint64) {
-	mb.Add(MetricEventError, n)
-}
-
-func (mb *MetricBucket) Error() uint64 {
-	return mb.Get(MetricEventError)
-}
-
-func (mb *MetricBucket) AddRt(rt uint64) {
-	mb.Add(MetricEventRt, rt)
-	// Not thread-safe, but it's okay.
-	if rt < mb.minRt {
-		mb.minRt = rt
-	}
-}
-
-func (mb *MetricBucket) Rt() uint64 {
-	return mb.Get(MetricEventRt)
 }

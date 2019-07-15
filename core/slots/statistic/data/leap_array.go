@@ -271,10 +271,10 @@ func (sw *SlidingWindow) MinRt() uint64 {
 	return min
 }
 
-func (sw *SlidingWindow) WindowLengthInMs() uint32 {
-	return sw.data.windowLengthInMs
+func (sw *SlidingWindow) GetWindowIntervalInMs() uint32 {
+	return sw.data.intervalInMs
 }
 
-func (sw *SlidingWindow) WindowLengthInSec() float64 {
-	return float64(sw.data.windowLengthInMs / 1000.0)
+func (sw *SlidingWindow) GetWindowIntervalInSec() float64 {
+	return float64(sw.data.intervalInMs) / 1000.0
 }
