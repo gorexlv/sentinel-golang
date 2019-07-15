@@ -1,6 +1,7 @@
 package chain
 
 import (
+	"github.com/sentinel-group/sentinel-golang/core/node"
 	"github.com/sentinel-group/sentinel-golang/core/slots/base"
 )
 
@@ -9,12 +10,12 @@ type Slot interface {
 	/**
 	 * Entrance of this slots.
 	 */
-	Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, node *base.DefaultNode, count int, prioritized bool) (*base.TokenResult, error)
+	Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, node *node.DefaultNode, count int, prioritized bool) (*base.TokenResult, error)
 
 	Exit(context *base.Context, resourceWrapper *base.ResourceWrapper, count int) error
 
 	// 传递进入
-	FireEntry(context *base.Context, resourceWrapper *base.ResourceWrapper, defaultNode *base.DefaultNode, count int, prioritized bool) (*base.TokenResult, error)
+	FireEntry(context *base.Context, resourceWrapper *base.ResourceWrapper, defaultNode *node.DefaultNode, count int, prioritized bool) (*base.TokenResult, error)
 
 	// 传递退出
 	FireExit(context *base.Context, resourceWrapper *base.ResourceWrapper, count int) error
@@ -31,7 +32,7 @@ type LinkedSlot struct {
 }
 
 // 传递退出
-func (s *LinkedSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, node *base.DefaultNode, count int, prioritized bool) (*base.TokenResult, error) {
+func (s *LinkedSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, node *node.DefaultNode, count int, prioritized bool) (*base.TokenResult, error) {
 	return s.FireEntry(ctx, resWrapper, node, count, prioritized)
 }
 
@@ -41,11 +42,11 @@ func (s *LinkedSlot) Exit(context *base.Context, resourceWrapper *base.ResourceW
 }
 
 // 传递进入, 没有下一个就返回 ResultStatusPass
-func (s *LinkedSlot) FireEntry(context *base.Context, resourceWrapper *base.ResourceWrapper, defaultNode *base.DefaultNode, count int, prioritized bool) (*base.TokenResult, error) {
+func (s *LinkedSlot) FireEntry(context *base.Context, resourceWrapper *base.ResourceWrapper, defaultNode *node.DefaultNode, count int, prioritized bool) (*base.TokenResult, error) {
 	if s.next != nil {
 		return s.next.Entry(context, resourceWrapper, defaultNode, count, prioritized)
 	}
-	return base.NewSlotResultPass(), nil
+	return base.NewResultPass(), nil
 }
 
 // 传递退出，没有下一个就返回

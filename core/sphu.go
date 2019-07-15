@@ -1,6 +1,7 @@
 package core
 
 import (
+	"github.com/sentinel-group/sentinel-golang/core/node"
 	"github.com/sentinel-group/sentinel-golang/core/slots/base"
 	"github.com/sentinel-group/sentinel-golang/core/slots/chain"
 	"github.com/sentinel-group/sentinel-golang/core/slots/flow"
@@ -23,11 +24,11 @@ func NewDefaultSlotChainBuilder() *DefaultSlotChainBuilder {
 }
 
 var defaultChain chain.SlotChain
-var defaultNode *base.DefaultNode
+var defaultNode *node.DefaultNode
 
 func init() {
 	defaultChain = NewDefaultSlotChainBuilder().Build()
-	defaultNode = base.NewDefaultNode(nil)
+	defaultNode = node.NewDefaultNode()
 }
 
 func Entry(resource string) (*base.TokenResult, error) {

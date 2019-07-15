@@ -1,6 +1,7 @@
 package flow
 
 import (
+	"github.com/sentinel-group/sentinel-golang/core/node"
 	"github.com/sentinel-group/sentinel-golang/core/slots/base"
 	"github.com/sentinel-group/sentinel-golang/core/util"
 	"math"
@@ -9,7 +10,7 @@ import (
 )
 
 type TrafficShapingController interface {
-	CanPass(ctx *base.Context, node *base.DefaultNode, acquire uint32) bool
+	CanPass(ctx *base.Context, node *node.DefaultNode, acquire uint32) bool
 }
 
 type DefaultController struct {
@@ -17,7 +18,7 @@ type DefaultController struct {
 	count uint64
 }
 
-func (dc *DefaultController) CanPass(ctx *base.Context, node *base.DefaultNode, acquire uint32) bool {
+func (dc *DefaultController) CanPass(ctx *base.Context, node *node.DefaultNode, acquire uint32) bool {
 	curCount := dc.avgUsedTokens(node)
 	if (curCount + uint64(acquire)) > dc.count {
 		return false
@@ -25,14 +26,14 @@ func (dc *DefaultController) CanPass(ctx *base.Context, node *base.DefaultNode, 
 	return true
 }
 
-func (dc *DefaultController) avgUsedTokens(node *base.DefaultNode) uint64 {
+func (dc *DefaultController) avgUsedTokens(node *node.DefaultNode) uint64 {
 	if node == nil {
 		return 0
 	}
 	if dc.grade == FlowGradeThread {
 		return node.CurGoroutineNum()
 	}
-	return node.PassQps()
+	return uint64(node.PassQps())
 }
 
 type RateLimiterController struct {
@@ -41,7 +42,7 @@ type RateLimiterController struct {
 	latestPassedTime  int64
 }
 
-func (rlc *RateLimiterController) CanPass(ctx *base.Context, node *base.DefaultNode, acquire uint32) bool {
+func (rlc *RateLimiterController) CanPass(ctx *base.Context, node *node.DefaultNode, acquire uint32) bool {
 	if acquire < 0 {
 		return true
 	}
@@ -74,13 +75,13 @@ func (rlc *RateLimiterController) CanPass(ctx *base.Context, node *base.DefaultN
 type WarmUpController struct {
 }
 
-func (wpc WarmUpController) CanPass(ctx *base.Context, node *base.DefaultNode, acquire uint32) bool {
+func (wpc WarmUpController) CanPass(ctx *base.Context, node *node.DefaultNode, acquire uint32) bool {
 	return true
 }
 
 type WarmUpRateLimiterController struct {
 }
 
-func (wpc WarmUpRateLimiterController) CanPass(ctx *base.Context, node *base.DefaultNode, acquire uint32) bool {
+func (wpc WarmUpRateLimiterController) CanPass(ctx *base.Context, node *node.DefaultNode, acquire uint32) bool {
 	return true
 }

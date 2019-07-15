@@ -1,6 +1,7 @@
 package chain
 
 import (
+	"github.com/sentinel-group/sentinel-golang/core/node"
 	"github.com/sentinel-group/sentinel-golang/core/slots/base"
 )
 
@@ -20,7 +21,7 @@ type SlotChain interface {
 	AddLast(slot Slot)
 
 	// fire to next slot
-	Entry(context *base.Context, resourceWrapper *base.ResourceWrapper, defaultNode *base.DefaultNode, count int, prioritized bool) (*base.TokenResult, error)
+	Entry(context *base.Context, resourceWrapper *base.ResourceWrapper, defaultNode *node.DefaultNode, count int, prioritized bool) (*base.TokenResult, error)
 	// fire to next slot
 	Exit(context *base.Context, resourceWrapper *base.ResourceWrapper, count int) error
 }
@@ -49,7 +50,7 @@ func (lsc *LinkedSlotChain) AddLast(slot Slot) {
 	lsc.end = slot
 }
 
-func (lsc *LinkedSlotChain) Entry(context *base.Context, resourceWrapper *base.ResourceWrapper, defaultNode *base.DefaultNode, count int, prioritized bool) (*base.TokenResult, error) {
+func (lsc *LinkedSlotChain) Entry(context *base.Context, resourceWrapper *base.ResourceWrapper, defaultNode *node.DefaultNode, count int, prioritized bool) (*base.TokenResult, error) {
 	return lsc.first.Entry(context, resourceWrapper, defaultNode, count, prioritized)
 }
 

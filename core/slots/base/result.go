@@ -29,18 +29,18 @@ type TokenResult struct {
 	ErrorMsg      string
 }
 
-func NewSlotResultPass() *TokenResult {
+func NewResultPass() *TokenResult {
 	return &TokenResult{Status: ResultStatusPass}
 }
 
-func NewSlotResultBlock(blockedReason string) *TokenResult {
+func NewResultBlock(blockedReason string) *TokenResult {
 	return &TokenResult{Status: ResultStatusBlocked, BlockedReason: blockedReason}
 }
 
-func NewSlotResultWait(waitMs uint64) *TokenResult {
+func NewResultWait(waitMs uint64) *TokenResult {
 	return &TokenResult{Status: ResultStatusWait, WaitMs: waitMs}
 }
 
-func NewSlotResultError(errorMsg string) *TokenResult {
+func NewResultError(errorMsg string) *TokenResult {
 	return &TokenResult{Status: ResultStatusError, ErrorMsg: errorMsg}
 }

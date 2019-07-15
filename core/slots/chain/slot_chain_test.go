@@ -8,6 +8,7 @@ package chain
 
 import (
 	"errors"
+	"github.com/sentinel-group/sentinel-golang/core/node"
 	"github.com/sentinel-group/sentinel-golang/core/slots/base"
 	"testing"
 )
@@ -19,7 +20,7 @@ type IncrSlot struct {
 	LinkedSlot
 }
 
-func (s *IncrSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, node *base.DefaultNode, count int, prioritized bool) (*base.TokenResult, error) {
+func (s *IncrSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, node *node.DefaultNode, count int, prioritized bool) (*base.TokenResult, error) {
 	count++
 	return s.FireEntry(ctx, resWrapper, node, count, prioritized)
 }
@@ -34,7 +35,7 @@ type DecrSlot struct {
 	LinkedSlot
 }
 
-func (s *DecrSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, node *base.DefaultNode, count int, prioritized bool) (*base.TokenResult, error) {
+func (s *DecrSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, node *node.DefaultNode, count int, prioritized bool) (*base.TokenResult, error) {
 	count--
 	return s.FireEntry(ctx, resWrapper, node, count, prioritized)
 }
@@ -50,11 +51,11 @@ type GreaterZeroPassSlot struct {
 	LinkedSlot
 }
 
-func (s *GreaterZeroPassSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, node *base.DefaultNode, count int, prioritized bool) (*base.TokenResult, error) {
+func (s *GreaterZeroPassSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, node *node.DefaultNode, count int, prioritized bool) (*base.TokenResult, error) {
 	if count > s.num {
 		return s.FireEntry(ctx, resWrapper, node, count, prioritized)
 	} else {
-		return base.NewSlotResultBlock("GreaterZeroPassSlot"), nil
+		return base.NewResultBlock("GreaterZeroPassSlot"), nil
 	}
 }
 
