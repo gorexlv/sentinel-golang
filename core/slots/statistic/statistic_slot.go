@@ -11,33 +11,60 @@ type StatisticSlot struct {
 	chain.LinkedSlot
 }
 
-func (fs *StatisticSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, node *node.DefaultNode, count int, prioritized bool) (*base.TokenResult, error) {
-	var r *base.TokenResult
+func (fs *StatisticSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error) {
 	var err error
-	defer func() {
-		if e := recover(); e != nil {
-			r = base.NewResultError("StatisticSlot")
-			err = errors.New("panic occur")
-		}
-	}()
 	// fire next slot
-	result, err := fs.FireEntry(ctx, resWrapper, node, count, prioritized)
+	result, err := fs.FireEntry(ctx, resWrapper, count, prioritized)
+
 	if result == nil {
-		return base.NewResultError("result is nil"), err
+		panic(errors.New("result is nil"))
 	}
 	if err != nil {
 		return base.NewResultError("err is not nil"), err
 	}
+	defaultNode := resWrapper.DefaultNode()
+	switch result.Status {
+	case base.ResultStatusPass:
+		processPass(defaultNode, count)
+	case base.ResultStatusBlocked:
+		processBlock(defaultNode, count)
+	case base.ResultStatusWait:
+		processWait(defaultNode, count)
+	case base.ResultStatusError:
+		processError(defaultNode, count)
+	default:
+		panic("should not occur")
+	}
 
-	if result.Status == base.ResultStatusError {
-		// TO DO
-	}
-	if result.Status == base.ResultStatusPass {
-		node.AddPassRequest(1)
-	}
 	return result, err
 }
 
-func (fs *StatisticSlot) Exit(ctx *base.Context, resourceWrapper *base.ResourceWrapper, count int) error {
-	return fs.FireExit(ctx, resourceWrapper, count)
+func processWait(node *node.DefaultNode, count int) {
+	panic("should not occur")
+}
+
+func processError(node *node.DefaultNode, count int) {
+	node.AddErrorRequest(uint64(count))
+}
+
+func processBlock(node *node.DefaultNode, count int) {
+	node.AddBlockRequest(uint64(count))
+}
+
+func processPass(node *node.DefaultNode, count int) {
+	node.IncreaseGoroutineNum()
+	node.AddPassRequest(uint64(count))
+}
+
+func (fs *StatisticSlot) Exit(ctx *base.Context, resWrapper *base.ResourceWrapper, count int) error {
+	defaultNode := resWrapper.DefaultNode()
+	if defaultNode == nil {
+		panic("DefaultNode is nil")
+	}
+	rt := resWrapper.CreateTime() - resWrapper.EndTime()
+
+	defaultNode.AddRtAndSuccess(rt, 1)
+	defaultNode.DecreaseGoroutineNum()
+
+	return fs.FireExit(ctx, resWrapper, count)
 }

@@ -1,7 +1,6 @@
 package chain
 
 import (
-	"github.com/sentinel-group/sentinel-golang/core/node"
 	"github.com/sentinel-group/sentinel-golang/core/slots/base"
 )
 
@@ -10,15 +9,15 @@ type Slot interface {
 	/**
 	 * Entrance of this slots.
 	 */
-	Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, node *node.DefaultNode, count int, prioritized bool) (*base.TokenResult, error)
+	Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error)
 
-	Exit(context *base.Context, resourceWrapper *base.ResourceWrapper, count int) error
+	Exit(ctx *base.Context, resWrapper *base.ResourceWrapper, count int) error
 
 	// 传递进入
-	FireEntry(context *base.Context, resourceWrapper *base.ResourceWrapper, defaultNode *node.DefaultNode, count int, prioritized bool) (*base.TokenResult, error)
+	FireEntry(ctx *base.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error)
 
 	// 传递退出
-	FireExit(context *base.Context, resourceWrapper *base.ResourceWrapper, count int) error
+	FireExit(ctx *base.Context, resWrapper *base.ResourceWrapper, count int) error
 
 	GetNext() Slot
 
@@ -32,27 +31,27 @@ type LinkedSlot struct {
 }
 
 // 传递退出
-func (s *LinkedSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, node *node.DefaultNode, count int, prioritized bool) (*base.TokenResult, error) {
-	return s.FireEntry(ctx, resWrapper, node, count, prioritized)
+func (s *LinkedSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error) {
+	return s.FireEntry(ctx, resWrapper, count, prioritized)
 }
 
 // 传递进入
-func (s *LinkedSlot) Exit(context *base.Context, resourceWrapper *base.ResourceWrapper, count int) error {
-	return s.FireExit(context, resourceWrapper, count)
+func (s *LinkedSlot) Exit(ctx *base.Context, resWrapper *base.ResourceWrapper, count int) error {
+	return s.FireExit(ctx, resWrapper, count)
 }
 
 // 传递进入, 没有下一个就返回 ResultStatusPass
-func (s *LinkedSlot) FireEntry(context *base.Context, resourceWrapper *base.ResourceWrapper, defaultNode *node.DefaultNode, count int, prioritized bool) (*base.TokenResult, error) {
+func (s *LinkedSlot) FireEntry(ctx *base.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error) {
 	if s.next != nil {
-		return s.next.Entry(context, resourceWrapper, defaultNode, count, prioritized)
+		return s.next.Entry(ctx, resWrapper, count, prioritized)
 	}
 	return base.NewResultPass(), nil
 }
 
 // 传递退出，没有下一个就返回
-func (s *LinkedSlot) FireExit(context *base.Context, resourceWrapper *base.ResourceWrapper, count int) error {
+func (s *LinkedSlot) FireExit(ctx *base.Context, resWrapper *base.ResourceWrapper, count int) error {
 	if s.next != nil {
-		return s.next.Exit(context, resourceWrapper, count)
+		return s.next.Exit(ctx, resWrapper, count)
 	} else {
 		return nil
 	}

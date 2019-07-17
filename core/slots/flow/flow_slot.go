@@ -11,25 +11,29 @@ type FlowSlot struct {
 	RuleManager *RuleManager
 }
 
-func (fs *FlowSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, node *node.DefaultNode, count int, prioritized bool) (*base.TokenResult, error) {
-	// no rule return pass
+func (fs *FlowSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error) {
+	defaultNode := resWrapper.DefaultNode()
+	if defaultNode == nil {
+		panic("DefaultNode is nil")
+	}
+
 	if fs.RuleManager == nil {
-		return fs.FireEntry(ctx, resWrapper, node, count, false)
+		return fs.FireEntry(ctx, resWrapper, count, false)
 	}
 	rules := fs.RuleManager.getRuleBySource(resWrapper.ResourceName)
 	if len(rules) == 0 {
-		return fs.FireEntry(ctx, resWrapper, node, count, false)
+		return fs.FireEntry(ctx, resWrapper, count, false)
 	}
-	success := checkFlow(ctx, resWrapper, rules, node, count)
+	success := checkFlow(ctx, resWrapper, rules, defaultNode, count)
 	if success {
-		return fs.FireEntry(ctx, resWrapper, node, count, false)
+		return fs.FireEntry(ctx, resWrapper, count, false)
 	} else {
 		return base.NewResultBlock("FlowSlot"), nil
 	}
 }
 
-func (fs *FlowSlot) Exit(ctx *base.Context, resourceWrapper *base.ResourceWrapper, count int) error {
-	return fs.FireExit(ctx, resourceWrapper, count)
+func (fs *FlowSlot) Exit(ctx *base.Context, resWrapper *base.ResourceWrapper, count int) error {
+	return fs.FireExit(ctx, resWrapper, count)
 }
 
 func checkFlow(ctx *base.Context, resourceWrap *base.ResourceWrapper, rules []*rule, node *node.DefaultNode, count int) bool {

@@ -8,7 +8,6 @@ package chain
 
 import (
 	"errors"
-	"github.com/sentinel-group/sentinel-golang/core/node"
 	"github.com/sentinel-group/sentinel-golang/core/slots/base"
 	"testing"
 )
@@ -20,14 +19,14 @@ type IncrSlot struct {
 	LinkedSlot
 }
 
-func (s *IncrSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, node *node.DefaultNode, count int, prioritized bool) (*base.TokenResult, error) {
+func (s *IncrSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error) {
 	count++
-	return s.FireEntry(ctx, resWrapper, node, count, prioritized)
+	return s.FireEntry(ctx, resWrapper, count, prioritized)
 }
 
-func (s *IncrSlot) Exit(context *base.Context, resourceWrapper *base.ResourceWrapper, count int) error {
+func (s *IncrSlot) Exit(ctx *base.Context, resWrapper *base.ResourceWrapper, count int) error {
 	count++
-	return s.FireExit(context, resourceWrapper, count)
+	return s.FireExit(ctx, resWrapper, count)
 }
 
 // 继承 LinkedProessorSlot 并完全实现 Slot
@@ -35,14 +34,14 @@ type DecrSlot struct {
 	LinkedSlot
 }
 
-func (s *DecrSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, node *node.DefaultNode, count int, prioritized bool) (*base.TokenResult, error) {
+func (s *DecrSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error) {
 	count--
-	return s.FireEntry(ctx, resWrapper, node, count, prioritized)
+	return s.FireEntry(ctx, resWrapper, count, prioritized)
 }
 
-func (s *DecrSlot) Exit(context *base.Context, resourceWrapper *base.ResourceWrapper, count int) error {
+func (s *DecrSlot) Exit(ctx *base.Context, resWrapper *base.ResourceWrapper, count int) error {
 	count--
-	return s.FireExit(context, resourceWrapper, count)
+	return s.FireExit(ctx, resWrapper, count)
 }
 
 // 继承 LinkedProessorSlot 并完全实现 Slot
@@ -51,19 +50,19 @@ type GreaterZeroPassSlot struct {
 	LinkedSlot
 }
 
-func (s *GreaterZeroPassSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, node *node.DefaultNode, count int, prioritized bool) (*base.TokenResult, error) {
+func (s *GreaterZeroPassSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error) {
 	if count > s.num {
-		return s.FireEntry(ctx, resWrapper, node, count, prioritized)
+		return s.FireEntry(ctx, resWrapper, count, prioritized)
 	} else {
 		return base.NewResultBlock("GreaterZeroPassSlot"), nil
 	}
 }
 
-func (s *GreaterZeroPassSlot) Exit(context *base.Context, resourceWrapper *base.ResourceWrapper, count int) error {
+func (s *GreaterZeroPassSlot) Exit(ctx *base.Context, resWrapper *base.ResourceWrapper, count int) error {
 	if count <= 0 {
 		return errors.New("GreaterZeroPassSlot")
 	}
-	return s.FireExit(context, resourceWrapper, count)
+	return s.FireExit(ctx, resWrapper, count)
 }
 
 func TestLinkedSlotChain_AddFirst_Pass(t *testing.T) {
@@ -71,7 +70,7 @@ func TestLinkedSlotChain_AddFirst_Pass(t *testing.T) {
 	newChain.AddFirst(new(GreaterZeroPassSlot))
 	newChain.AddFirst(new(IncrSlot))
 
-	result, _ := newChain.Entry(nil, nil, nil, 0, false)
+	result, _ := newChain.Entry(nil, nil, 1, false)
 	if result.Status != base.ResultStatusPass {
 		t.Fatal("TestLinkedSlotChain_AddFirst_Block")
 	}
@@ -87,7 +86,7 @@ func TestLinkedSlotChain_AddFirst_Block(t *testing.T) {
 	newChain.AddFirst(new(GreaterZeroPassSlot))
 	newChain.AddFirst(new(DecrSlot))
 
-	result, _ := newChain.Entry(nil, nil, nil, 0, false)
+	result, _ := newChain.Entry(nil, nil, 1, false)
 	if result.Status != base.ResultStatusBlocked {
 		t.Fatal("TestLinkedSlotChain_AddFirst_Block")
 	}
@@ -103,7 +102,7 @@ func TestLinkedSlotChain_AddLast_Pass(t *testing.T) {
 	newChain.AddLast(new(IncrSlot))
 	newChain.AddLast(new(DecrSlot))
 	newChain.AddLast(new(GreaterZeroPassSlot))
-	result, _ := newChain.Entry(nil, nil, nil, 0, false)
+	result, _ := newChain.Entry(nil, nil, 1, false)
 	if result.Status != base.ResultStatusPass {
 		t.Fatal("TestLinkedSlotChain_AddLast_Pass")
 	}
@@ -121,7 +120,7 @@ func TestLinkedSlotChain_AddLast_Block(t *testing.T) {
 	newChain.AddLast(new(DecrSlot))
 	newChain.AddLast(new(GreaterZeroPassSlot))
 
-	result, _ := newChain.Entry(nil, nil, nil, 0, false)
+	result, _ := newChain.Entry(nil, nil, 1, false)
 	if result.Status != base.ResultStatusBlocked {
 		t.Fatal("TestLinkedSlotChain_AddLast_Block")
 	}

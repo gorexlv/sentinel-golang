@@ -8,7 +8,10 @@ import (
 type Context struct {
 	name         string
 	entranceNode node.DefaultNode
-	curEntry     Entry
 	origin       string
 	context      context.Context
+}
+
+func NewContext() *Context {
+	return &Context{}
 }

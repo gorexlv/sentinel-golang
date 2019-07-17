@@ -6,13 +6,6 @@
  */
 package base
 
-type ResourceWrapper struct {
-	// unique resource name
-	ResourceName string
-	//
-	ResourceType int
-}
-
 type SlotResultStatus int8
 
 const (
