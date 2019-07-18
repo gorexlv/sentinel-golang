@@ -50,21 +50,29 @@ func iiiTestConcurrent100() {
 	}
 }
 
-//func TestTriableMutex_TryLock_ManyTime(t *testing.T) {
-//	tLock := new(TriableMutex)
-//
-//	for i:=0; i<1000; i++ {
-//
-//	}
-//}
-//
-//func mustAllLockSucc( mutex *TriableMutex ){
-//	for {
-//		if mutex.TryLock() {
-//
-//		}
-//	}
-//}
+func TestTriableMutex_TryLock_ManyTime(t *testing.T) {
+	tLock := new(TriableMutex)
+	wg := &sync.WaitGroup{}
+	for a := 0; a < 1000; a++ {
+		for i := 0; i < 1000; i++ {
+			wg.Add(1)
+			go mustAllLockSucc(tLock, wg)
+		}
+		wg.Wait()
+	}
+}
+
+func mustAllLockSucc(mutex *TriableMutex, wg *sync.WaitGroup) {
+	for {
+		if mutex.TryLock() {
+			mutex.Unlock()
+			wg.Done()
+			return
+		} else {
+			runtime.Gosched()
+		}
+	}
+}
 
 func TestTriableMutex_TryLock_Concurrent1000(t *testing.T) {
 	iiiTestConcurrent100()
