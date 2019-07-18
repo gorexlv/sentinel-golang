@@ -1,12 +1,13 @@
 package base
 
 import (
+	"github.com/sentinel-group/sentinel-golang/core/context"
 	"github.com/sentinel-group/sentinel-golang/core/node"
 )
 
 type BaseResource struct {
 	defaultNode    *node.DefaultNode
-	ctx            *Context
+	ctx            *context.Context
 	createTimeInMs uint64
 	endTimeInMs    uint64
 }
@@ -27,11 +28,11 @@ func (b *BaseResource) SetCreateTime(createTimeInMs uint64) {
 	b.createTimeInMs = createTimeInMs
 }
 
-func (b *BaseResource) Ctx() *Context {
+func (b *BaseResource) Ctx() *context.Context {
 	return b.ctx
 }
 
-func (b *BaseResource) SetCtx(ctx *Context) {
+func (b *BaseResource) SetCtx(ctx *context.Context) {
 	b.ctx = ctx
 }
 

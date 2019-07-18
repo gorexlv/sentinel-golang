@@ -50,6 +50,22 @@ func iiiTestConcurrent100() {
 	}
 }
 
+//func TestTriableMutex_TryLock_ManyTime(t *testing.T) {
+//	tLock := new(TriableMutex)
+//
+//	for i:=0; i<1000; i++ {
+//
+//	}
+//}
+//
+//func mustAllLockSucc( mutex *TriableMutex ){
+//	for {
+//		if mutex.TryLock() {
+//
+//		}
+//	}
+//}
+
 func TestTriableMutex_TryLock_Concurrent1000(t *testing.T) {
 	iiiTestConcurrent100()
 }

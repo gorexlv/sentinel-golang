@@ -1,6 +1,7 @@
 package chain
 
 import (
+	"github.com/sentinel-group/sentinel-golang/core/context"
 	"github.com/sentinel-group/sentinel-golang/core/slots/base"
 )
 
@@ -9,15 +10,15 @@ type Slot interface {
 	/**
 	 * Entrance of this slots.
 	 */
-	Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error)
+	Entry(ctx *context.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error)
 
-	Exit(ctx *base.Context, resWrapper *base.ResourceWrapper, count int) error
+	Exit(ctx *context.Context, resWrapper *base.ResourceWrapper, count int) error
 
 	// 传递进入
-	FireEntry(ctx *base.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error)
+	FireEntry(ctx *context.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error)
 
 	// 传递退出
-	FireExit(ctx *base.Context, resWrapper *base.ResourceWrapper, count int) error
+	FireExit(ctx *context.Context, resWrapper *base.ResourceWrapper, count int) error
 
 	GetNext() Slot
 
@@ -31,17 +32,17 @@ type LinkedSlot struct {
 }
 
 // 传递退出
-func (s *LinkedSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error) {
+func (s *LinkedSlot) Entry(ctx *context.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error) {
 	return s.FireEntry(ctx, resWrapper, count, prioritized)
 }
 
 // 传递进入
-func (s *LinkedSlot) Exit(ctx *base.Context, resWrapper *base.ResourceWrapper, count int) error {
+func (s *LinkedSlot) Exit(ctx *context.Context, resWrapper *base.ResourceWrapper, count int) error {
 	return s.FireExit(ctx, resWrapper, count)
 }
 
 // 传递进入, 没有下一个就返回 ResultStatusPass
-func (s *LinkedSlot) FireEntry(ctx *base.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error) {
+func (s *LinkedSlot) FireEntry(ctx *context.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error) {
 	if s.next != nil {
 		return s.next.Entry(ctx, resWrapper, count, prioritized)
 	}
@@ -49,7 +50,7 @@ func (s *LinkedSlot) FireEntry(ctx *base.Context, resWrapper *base.ResourceWrapp
 }
 
 // 传递退出，没有下一个就返回
-func (s *LinkedSlot) FireExit(ctx *base.Context, resWrapper *base.ResourceWrapper, count int) error {
+func (s *LinkedSlot) FireExit(ctx *context.Context, resWrapper *base.ResourceWrapper, count int) error {
 	if s.next != nil {
 		return s.next.Exit(ctx, resWrapper, count)
 	} else {

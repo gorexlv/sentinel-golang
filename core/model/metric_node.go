@@ -1,4 +1,4 @@
-package node
+package model
 
 type MetricNode struct {
 	Timestamp  uint64

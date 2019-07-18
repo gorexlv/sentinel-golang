@@ -1,10 +1,13 @@
 package data
 
 import (
+	"fmt"
 	"github.com/sentinel-group/sentinel-golang/core/util"
+	"math/rand"
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 )
 
 const (
@@ -148,9 +151,9 @@ func TestWindowAfterOneInterval(t *testing.T) {
 	}
 }
 
-func TestNTimeMultiGoroutineUpdateEmptyWindow(t *testing.T) {
+func TestNTimeMultiGoroutineUpdateOneWindow(t *testing.T) {
 	for i := 0; i < 1000; i++ {
-		_nTestMultiGoroutineUpdateEmptyWindow(t)
+		multiGoroutineUpdateWindows(t)
 	}
 }
 
@@ -171,35 +174,109 @@ func _task(wg *sync.WaitGroup, slidingWindow *SlidingWindow, ti uint64, t *testi
 	wg.Done()
 }
 
-func _nTestMultiGoroutineUpdateEmptyWindow(t *testing.T) {
+func multiGoroutineUpdateWindows(t *testing.T) {
 	slidingWindow := NewSlidingWindow(SampleCount, IntervalInMs)
 	firstTime := util.GetTimeMilli()
 
-	const GoroutineNum = 1000
+	const GoroutineNum = 10
 	wg := &sync.WaitGroup{}
 	wg.Add(GoroutineNum)
-	//st := util.GetTimeNano()
 	var cnt = uint64(0)
 	for i := 0; i < GoroutineNum; i++ {
 		go _task(wg, slidingWindow, firstTime, t, &cnt)
 	}
 	wg.Wait()
-	//t.Logf("finish goroutines:  %d", atomic.LoadUint64(&cnt))
-	//et := util.GetTimeNano()
-	//dif := et - st
-	//t.Logf("finish all goroutines, cost time is %d ns", dif)
-	wr2, err := slidingWindow.data.CurrentWindowWithTime(firstTime, slidingWindow)
+	ww, err := slidingWindow.data.CurrentWindowWithTime(firstTime, slidingWindow)
 	if err != nil {
 		t.Errorf("Unexcepted error")
 	}
-	mb2, ok := wr2.value.(*MetricBucket)
+	mb, ok := ww.value.(*MetricBucket)
 	if !ok {
 		t.Errorf("Unexcepted error")
 	}
-	if mb2.Get(MetricEventPass) != GoroutineNum {
-		t.Errorf("Unexcepted error, infact, %d", mb2.Get(MetricEventPass))
+	if mb.Get(MetricEventPass) != GoroutineNum {
+		t.Errorf("Unexcepted error, infact, %d", mb.Get(MetricEventPass))
 	}
-	if mb2.Get(MetricEventBlock) != GoroutineNum {
-		t.Errorf("Unexcepted error, infact, %d", mb2.Get(MetricEventBlock))
+	if mb.Get(MetricEventBlock) != GoroutineNum {
+		t.Errorf("Unexcepted error, infact, %d", mb.Get(MetricEventBlock))
+	}
+}
+
+func TestMultiGoroutineUpdateOneWindow(t *testing.T) {
+	slidingWindow := NewSlidingWindow(SampleCount, IntervalInMs)
+
+	wg := &sync.WaitGroup{}
+
+	for i := 0; i < 1000; i++ {
+		for i := 0; i < 100; i++ {
+			wg.Add(1)
+			go testAddCountRandTime(t, wg, slidingWindow)
+		}
+		wg.Wait()
+		fmt.Println("done")
+	}
+}
+
+func testAddCountRandTime(t *testing.T, wg *sync.WaitGroup, slidingWindow *SlidingWindow) {
+	r := rand.Uint32() % 10
+	time.Sleep(time.Duration(r) * time.Millisecond)
+
+	currentTime := util.GetTimeMilli()
+	wr, _ := slidingWindow.data.CurrentWindowWithTime(currentTime, slidingWindow)
+	mb, ok := wr.value.(*MetricBucket)
+	if !ok {
+		t.Errorf("Unexcepted error")
+	}
+	mb.Add(MetricEventPass, 1)
+	mb.Add(MetricEventError, 1)
+
+	wg.Done()
+}
+
+func TestSlidingWindow_Details(t *testing.T) {
+	slidingWindow := NewSlidingWindow(SampleCount, IntervalInMs)
+	currentTime := util.GetTimeMilli()
+	wr, _ := slidingWindow.data.CurrentWindowWithTime(currentTime, slidingWindow)
+	mb, ok := wr.value.(*MetricBucket)
+	if !ok {
+		t.Errorf("Unexcepted error")
+	}
+	mb.Add(MetricEventPass, 1)
+	mb.Add(MetricEventError, 1)
+
+	time.Sleep(time.Millisecond * time.Duration(WindowLengthImMs))
+	currentTime = util.GetTimeMilli()
+	wr, _ = slidingWindow.data.CurrentWindowWithTime(currentTime, slidingWindow)
+	mb, ok = wr.value.(*MetricBucket)
+	if !ok {
+		t.Errorf("Unexcepted error")
+	}
+	mb.Add(MetricEventPass, 2)
+	mb.Add(MetricEventError, 2)
+
+	time.Sleep(time.Millisecond * time.Duration(WindowLengthImMs))
+	currentTime = util.GetTimeMilli()
+	wr, _ = slidingWindow.data.CurrentWindowWithTime(currentTime, slidingWindow)
+	mb, ok = wr.value.(*MetricBucket)
+	if !ok {
+		t.Errorf("Unexcepted error")
+	}
+	mb.Add(MetricEventPass, 3)
+	mb.Add(MetricEventError, 3)
+
+	details := slidingWindow.Details()
+	if len(details) != 3 {
+		t.Errorf("Unexcepted error")
+	}
+
+	pass := uint64(0)
+	err := uint64(0)
+	for _, mn := range details {
+		pass = pass + mn.PassQps
+		err = err + mn.ErrorQps
+	}
+
+	if pass != 6 || err != 6 {
+		t.Errorf("Unexcepted error")
 	}
 }

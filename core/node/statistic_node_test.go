@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sentinel-group/sentinel-golang/core/slots/statistic/data"
+	"github.com/sentinel-group/sentinel-golang/core/statistic/data"
 )
 
 const maxDif = 0.1
@@ -152,4 +152,8 @@ func TestStatisticNode_Reset(t *testing.T) {
 	if sn.lastFetchTime != -1 {
 		t.Error("TestStatisticNode_Reset")
 	}
+}
+
+func TestStatisticNode_MutilGorotuine(t *testing.T) {
+
 }

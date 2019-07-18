@@ -4,33 +4,41 @@ import (
 	"fmt"
 	"github.com/sentinel-group/sentinel-golang/core"
 	"github.com/sentinel-group/sentinel-golang/core/slots/base"
+	"log"
 	"math/rand"
+	"net/http"
+	_ "net/http/pprof"
 	"sync"
 	"time"
 )
 
 func main() {
-	fmt.Println("=================start=================")
+	go func() {
+		log.Println(http.ListenAndServe("localhost:10000", nil))
+	}()
+
 	wg := &sync.WaitGroup{}
-	wg.Add(10)
 
-	for i := 0; i < 10; i++ {
-		go test(wg)
-	}
+	for a := 0; a < 100000; a++ {
+		for i := 0; i < 10; i++ {
+			wg.Add(1)
+			go test(wg, "test1")
+		}
 
-	wg.Add(10)
-	for i := 0; i < 10; i++ {
-		go test2(wg)
+		//for j := 0; j < 10; j++ {
+		//	wg.Add(1)
+		//	go test(wg,"test2")
+		//}
+		wg.Wait()
+
+		fmt.Println("done")
 	}
-	wg.Wait()
-	fmt.Println("=================end=================")
 }
 
-func test(wg *sync.WaitGroup) {
-	rand.Seed(1000)
-	r := rand.Int63() % 10
+func test(wg *sync.WaitGroup, res string) {
+	r := rand.Uint32() % 10
 	time.Sleep(time.Duration(r) * time.Millisecond)
-	result, e := core.Entry(nil, "test")
+	result, e := core.Entry(nil, res)
 	if e != nil {
 		fmt.Println(e.Error())
 		return
@@ -44,28 +52,5 @@ func test(wg *sync.WaitGroup) {
 	if result.Status == base.ResultStatusPass {
 		_ = result.Exit()
 	}
-	time.Sleep(time.Duration(r) * time.Millisecond)
-	wg.Done()
-}
-
-func test2(wg *sync.WaitGroup) {
-	rand.Seed(1000)
-	r := rand.Int63() % 10
-	time.Sleep(time.Duration(r) * time.Millisecond)
-	result, e := core.Entry(nil, "test2")
-	if e != nil {
-		fmt.Println(e.Error())
-		return
-	}
-	if result.Status == base.ResultStatusBlocked {
-		fmt.Println("reason:", result.BlockedReason)
-	}
-	if result.Status == base.ResultStatusError {
-		fmt.Println("reason:", result.ErrorMsg)
-	}
-	if result.Status == base.ResultStatusPass {
-		_ = result.Exit()
-	}
-	time.Sleep(time.Duration(r) * time.Millisecond)
 	wg.Done()
 }

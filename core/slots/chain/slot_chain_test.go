@@ -8,6 +8,7 @@ package chain
 
 import (
 	"errors"
+	"github.com/sentinel-group/sentinel-golang/core/context"
 	"github.com/sentinel-group/sentinel-golang/core/slots/base"
 	"testing"
 )
@@ -19,12 +20,12 @@ type IncrSlot struct {
 	LinkedSlot
 }
 
-func (s *IncrSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error) {
+func (s *IncrSlot) Entry(ctx *context.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error) {
 	count++
 	return s.FireEntry(ctx, resWrapper, count, prioritized)
 }
 
-func (s *IncrSlot) Exit(ctx *base.Context, resWrapper *base.ResourceWrapper, count int) error {
+func (s *IncrSlot) Exit(ctx *context.Context, resWrapper *base.ResourceWrapper, count int) error {
 	count++
 	return s.FireExit(ctx, resWrapper, count)
 }
@@ -34,12 +35,12 @@ type DecrSlot struct {
 	LinkedSlot
 }
 
-func (s *DecrSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error) {
+func (s *DecrSlot) Entry(ctx *context.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error) {
 	count--
 	return s.FireEntry(ctx, resWrapper, count, prioritized)
 }
 
-func (s *DecrSlot) Exit(ctx *base.Context, resWrapper *base.ResourceWrapper, count int) error {
+func (s *DecrSlot) Exit(ctx *context.Context, resWrapper *base.ResourceWrapper, count int) error {
 	count--
 	return s.FireExit(ctx, resWrapper, count)
 }
@@ -50,7 +51,7 @@ type GreaterZeroPassSlot struct {
 	LinkedSlot
 }
 
-func (s *GreaterZeroPassSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error) {
+func (s *GreaterZeroPassSlot) Entry(ctx *context.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error) {
 	if count > s.num {
 		return s.FireEntry(ctx, resWrapper, count, prioritized)
 	} else {
@@ -58,7 +59,7 @@ func (s *GreaterZeroPassSlot) Entry(ctx *base.Context, resWrapper *base.Resource
 	}
 }
 
-func (s *GreaterZeroPassSlot) Exit(ctx *base.Context, resWrapper *base.ResourceWrapper, count int) error {
+func (s *GreaterZeroPassSlot) Exit(ctx *context.Context, resWrapper *base.ResourceWrapper, count int) error {
 	if count <= 0 {
 		return errors.New("GreaterZeroPassSlot")
 	}

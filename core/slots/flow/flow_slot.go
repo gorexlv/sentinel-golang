@@ -1,6 +1,7 @@
 package flow
 
 import (
+	"github.com/sentinel-group/sentinel-golang/core/context"
 	"github.com/sentinel-group/sentinel-golang/core/node"
 	"github.com/sentinel-group/sentinel-golang/core/slots/base"
 	"github.com/sentinel-group/sentinel-golang/core/slots/chain"
@@ -11,7 +12,7 @@ type FlowSlot struct {
 	RuleManager *RuleManager
 }
 
-func (fs *FlowSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error) {
+func (fs *FlowSlot) Entry(ctx *context.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error) {
 	defaultNode := resWrapper.DefaultNode()
 	if defaultNode == nil {
 		panic("DefaultNode is nil")
@@ -32,11 +33,11 @@ func (fs *FlowSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, c
 	}
 }
 
-func (fs *FlowSlot) Exit(ctx *base.Context, resWrapper *base.ResourceWrapper, count int) error {
+func (fs *FlowSlot) Exit(ctx *context.Context, resWrapper *base.ResourceWrapper, count int) error {
 	return fs.FireExit(ctx, resWrapper, count)
 }
 
-func checkFlow(ctx *base.Context, resourceWrap *base.ResourceWrapper, rules []*rule, node *node.DefaultNode, count int) bool {
+func checkFlow(ctx *context.Context, resourceWrap *base.ResourceWrapper, rules []*rule, node *node.DefaultNode, count int) bool {
 	if rules == nil {
 		return true
 	}
@@ -48,6 +49,6 @@ func checkFlow(ctx *base.Context, resourceWrap *base.ResourceWrapper, rules []*r
 	return true
 }
 
-func canPass(ctx *base.Context, resourceWrap *base.ResourceWrapper, rule *rule, node *node.DefaultNode, count uint32) bool {
+func canPass(ctx *context.Context, resourceWrap *base.ResourceWrapper, rule *rule, node *node.DefaultNode, count uint32) bool {
 	return rule.controller_.CanPass(ctx, node, count)
 }

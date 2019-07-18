@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"fmt"
+	"github.com/sentinel-group/sentinel-golang/core/context"
 	"github.com/sentinel-group/sentinel-golang/core/node"
 	"github.com/sentinel-group/sentinel-golang/core/slots/base"
 	"github.com/sentinel-group/sentinel-golang/core/slots/chain"
@@ -9,20 +10,39 @@ import (
 )
 
 // 全局 StringResource -> DefaultNode
-var strResMap sync.Map
+var strResNodeMap sync.Map
+
+func StrResNodeMap() map[string]*node.DefaultNode {
+	data := make(map[string]*node.DefaultNode)
+
+	strResNodeMap.Range(func(key, value interface{}) bool {
+		strRes, ok := key.(string)
+		if !ok {
+			panic("key is not key")
+		}
+		defaultNode, ok := value.(*node.DefaultNode)
+		if !ok {
+			panic("value is not *DefaultNode")
+		}
+		data[strRes] = defaultNode
+		return true
+	})
+
+	return data
+}
 
 type ClusterBuilderSlot struct {
 	chain.LinkedSlot
 }
 
-func (fs *ClusterBuilderSlot) Entry(ctx *base.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error) {
-	defaultNode, ok := strResMap.Load(resWrapper.ResourceName)
+func (fs *ClusterBuilderSlot) Entry(ctx *context.Context, resWrapper *base.ResourceWrapper, count int, prioritized bool) (*base.TokenResult, error) {
+	defaultNode, ok := strResNodeMap.Load(resWrapper.ResourceName)
 	// not find make new DefaultNode
 	if !ok {
 		newNode := node.NewDefaultNode()
-		actual, loaded := strResMap.LoadOrStore(resWrapper.ResourceName, newNode)
+		actual, loaded := strResNodeMap.LoadOrStore(resWrapper.ResourceName, newNode)
 		if !loaded {
-			fmt.Println("new node add to strResMap")
+			fmt.Println("new node add to strResNodeMap")
 		}
 		defaultNode = actual
 	}
@@ -34,6 +54,6 @@ func (fs *ClusterBuilderSlot) Entry(ctx *base.Context, resWrapper *base.Resource
 	return fs.FireEntry(ctx, resWrapper, count, prioritized)
 }
 
-func (fs *ClusterBuilderSlot) Exit(ctx *base.Context, resWrapper *base.ResourceWrapper, count int) error {
+func (fs *ClusterBuilderSlot) Exit(ctx *context.Context, resWrapper *base.ResourceWrapper, count int) error {
 	return fs.FireExit(ctx, resWrapper, count)
 }

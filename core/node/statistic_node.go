@@ -1,7 +1,9 @@
 package node
 
 import (
-	"github.com/sentinel-group/sentinel-golang/core/slots/statistic/data"
+	"github.com/sentinel-group/sentinel-golang/core/model"
+	"github.com/sentinel-group/sentinel-golang/core/statistic/data"
+	"github.com/sentinel-group/sentinel-golang/core/util"
 	"sync/atomic"
 )
 
@@ -17,7 +19,7 @@ type StatisticNode struct {
 	rollingCounterInSecond *data.SlidingWindow
 	rollingCounterInMinute *data.SlidingWindow
 	currentGoroutineNum    uint64
-	lastFetchTime          int64
+	lastFetchTime          uint64
 }
 
 /*
@@ -32,7 +34,7 @@ func NewStatisticNode() *StatisticNode {
 		rollingCounterInSecond: data.NewSlidingWindow(sampleCountOfSecond, intervalInMsOfSecond),
 		rollingCounterInMinute: data.NewSlidingWindow(sampleCountOfMin, intervalInMsOfMin),
 		currentGoroutineNum:    0,
-		lastFetchTime:          -1,
+		lastFetchTime:          0,
 	}
 }
 
@@ -116,8 +118,35 @@ func (sn *StatisticNode) PreviousPassQps() uint64 {
 	panic("implement me")
 }
 
-func (sn *StatisticNode) Metrics() map[uint64]*MetricNode {
-	panic("implement me")
+func (sn *StatisticNode) Metrics() map[uint64]*model.MetricNode {
+	currentTime := util.GetTimeMilli()
+	currentTime = currentTime - currentTime%1000
+
+	newLastFetchTime := sn.lastFetchTime
+	metricNodes := sn.rollingCounterInMinute.Details()
+	timeMetricNode := make(map[uint64]*model.MetricNode)
+	for _, metricNode := range metricNodes {
+		if sn.isNodeInTime(metricNode, currentTime) && sn.isValidMetricNode(metricNode) {
+			timeMetricNode[metricNode.Timestamp] = metricNode
+			if metricNode.Timestamp > newLastFetchTime {
+				newLastFetchTime = metricNode.Timestamp
+			}
+		}
+	}
+	sn.lastFetchTime = newLastFetchTime
+	return timeMetricNode
+}
+
+func (sn *StatisticNode) isNodeInTime(mNode *model.MetricNode, currentTime uint64) bool {
+	return mNode.Timestamp > sn.lastFetchTime && mNode.Timestamp < currentTime
+}
+
+func (sn *StatisticNode) isValidMetricNode(node *model.MetricNode) bool {
+	return node.PassQps > 0 ||
+		node.BlockQps > 0 ||
+		node.SuccessQps > 0 ||
+		node.ErrorQps > 0 ||
+		node.Rt > 0
 }
 
 func (sn *StatisticNode) AddPassRequest(count uint64) {
@@ -155,5 +184,5 @@ func (sn *StatisticNode) Reset() {
 	sn.rollingCounterInSecond = data.NewSlidingWindow(sampleCountOfSecond, intervalInMsOfSecond)
 	sn.rollingCounterInMinute = data.NewSlidingWindow(sampleCountOfMin, intervalInMsOfMin)
 	sn.currentGoroutineNum = 0
-	sn.lastFetchTime = -1
+	sn.lastFetchTime = 0
 }

@@ -1,8 +1,8 @@
 package flow
 
 import (
+	"github.com/sentinel-group/sentinel-golang/core/context"
 	"github.com/sentinel-group/sentinel-golang/core/node"
-	"github.com/sentinel-group/sentinel-golang/core/slots/base"
 	"github.com/sentinel-group/sentinel-golang/core/util"
 	"math"
 	"sync/atomic"
@@ -10,7 +10,7 @@ import (
 )
 
 type TrafficShapingController interface {
-	CanPass(ctx *base.Context, node *node.DefaultNode, acquire uint32) bool
+	CanPass(ctx *context.Context, node *node.DefaultNode, acquire uint32) bool
 }
 
 type DefaultController struct {
@@ -18,7 +18,7 @@ type DefaultController struct {
 	count uint64
 }
 
-func (dc *DefaultController) CanPass(ctx *base.Context, node *node.DefaultNode, acquire uint32) bool {
+func (dc *DefaultController) CanPass(ctx *context.Context, node *node.DefaultNode, acquire uint32) bool {
 	curCount := dc.avgUsedTokens(node)
 	if (curCount + uint64(acquire)) > dc.count {
 		return false
@@ -42,7 +42,7 @@ type RateLimiterController struct {
 	latestPassedTime  int64
 }
 
-func (rlc *RateLimiterController) CanPass(ctx *base.Context, node *node.DefaultNode, acquire uint32) bool {
+func (rlc *RateLimiterController) CanPass(ctx *context.Context, node *node.DefaultNode, acquire uint32) bool {
 	if acquire < 0 {
 		return true
 	}
@@ -75,13 +75,13 @@ func (rlc *RateLimiterController) CanPass(ctx *base.Context, node *node.DefaultN
 type WarmUpController struct {
 }
 
-func (wpc WarmUpController) CanPass(ctx *base.Context, node *node.DefaultNode, acquire uint32) bool {
+func (wpc WarmUpController) CanPass(ctx *context.Context, node *node.DefaultNode, acquire uint32) bool {
 	return true
 }
 
 type WarmUpRateLimiterController struct {
 }
 
-func (wpc WarmUpRateLimiterController) CanPass(ctx *base.Context, node *node.DefaultNode, acquire uint32) bool {
+func (wpc WarmUpRateLimiterController) CanPass(ctx *context.Context, node *node.DefaultNode, acquire uint32) bool {
 	return true
 }

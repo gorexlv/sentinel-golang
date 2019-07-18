@@ -3,11 +3,12 @@ package core
 import (
 	"fmt"
 	"github.com/sentinel-group/sentinel-golang/core/common"
+	"github.com/sentinel-group/sentinel-golang/core/context"
 	"github.com/sentinel-group/sentinel-golang/core/slots/base"
 	"github.com/sentinel-group/sentinel-golang/core/slots/chain"
 	"github.com/sentinel-group/sentinel-golang/core/slots/cluster"
 	"github.com/sentinel-group/sentinel-golang/core/slots/flow"
-	"github.com/sentinel-group/sentinel-golang/core/slots/statistic"
+	"github.com/sentinel-group/sentinel-golang/core/statistic"
 	"github.com/sentinel-group/sentinel-golang/core/util"
 )
 
@@ -33,9 +34,9 @@ func init() {
 	defaultChain = NewDefaultSlotChainBuilder().Build()
 }
 
-func Entry(ctx *base.Context, resource string) (*common.Entry, error) {
+func Entry(ctx *context.Context, resource string) (*common.Entry, error) {
 	if nil == ctx {
-		ctx = base.NewContext()
+		ctx = context.NewContext()
 	}
 
 	resourceWrap := &base.ResourceWrapper{

@@ -1,5 +1,9 @@
 package node
 
+import (
+	"github.com/sentinel-group/sentinel-golang/core/model"
+)
+
 type Node interface {
 	/**
 	 * Get incoming request per minute ({@code pass + block}).
@@ -128,7 +132,7 @@ type Node interface {
 	 *
 	 * @return valid metric nodes of resources
 	 */
-	Metrics() map[uint64]*MetricNode
+	Metrics() map[uint64]*model.MetricNode
 
 	/**
 	 * Add pass count.
