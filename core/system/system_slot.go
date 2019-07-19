@@ -8,7 +8,9 @@ import (
 	"github.com/sentinel-group/sentinel-golang/core/slots/chain"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/mem"
+	"go.uber.org/zap"
 	"runtime"
+	"strconv"
 	"sync/atomic"
 	"time"
 )
@@ -113,29 +115,39 @@ var (
 )
 
 // 在初始化的时候就加载规则
-func LoadRules(systemRules []SystemRule) {
-	for _, systemRule := range systemRules {
-		maxGoroutine = systemRule.MaxGoroutine
-		maxMemUsedPercent = systemRule.MaxMemUsedPercent
-		maxCpuUsedPercent = systemRule.MaxCpuUsedPercent
-	}
+func LoadRules(systemRule SystemRule) {
+	maxGoroutine = systemRule.MaxGoroutine
+	maxMemUsedPercent = systemRule.MaxMemUsedPercent
+	maxCpuUsedPercent = systemRule.MaxCpuUsedPercent
 }
 
 // 检查系统情况
-func checkSystem(_ *base.ResourceWrapper) *base.TokenResult {
+func checkSystem(res *base.ResourceWrapper) *base.TokenResult {
 	// 系统协成个数
 	curGoNum := RunStatus.Goroutine()
 	if RunStatus.Goroutine() > maxGoroutine {
+		slog.GetLog(slog.BlockLog).Warn("block",
+			zap.String("ResName", res.ResourceName),
+			zap.String("curGoNum", strconv.Itoa(int(curGoNum))),
+			zap.String("maxGoroutine", strconv.Itoa(int(maxGoroutine))))
 		return base.NewResultBlock(fmt.Sprintf("RunStatus.Goroutine:%d > maxGoroutine:%d", curGoNum, maxGoroutine))
 	}
 	// cpu 使用率,这里等会等改成异步获取
 	curCpuUsed := RunStatus.CpuUsedPercent()
-	if curCpuUsed > maxMemUsedPercent {
+	if curCpuUsed > maxCpuUsedPercent {
+		slog.GetLog(slog.BlockLog).Warn("block",
+			zap.String("ResName", res.ResourceName),
+			zap.String("curCpuUsed", strconv.FormatFloat(curCpuUsed, 'f', -1, 64)),
+			zap.String("maxMemUsedPercent", strconv.FormatFloat(maxMemUsedPercent, 'f', -1, 64)))
 		return base.NewResultBlock(fmt.Sprintf("RunStatus.CpuUsedPercent:%f > MaxCpuUsedPercent:%f", curCpuUsed, maxCpuUsedPercent))
 	}
 	// 内存使用率
 	memUsed := RunStatus.MemUsedPercent()
 	if memUsed > maxMemUsedPercent {
+		slog.GetLog(slog.BlockLog).Warn("block",
+			zap.String("ResName", res.ResourceName),
+			zap.String("memUsed", strconv.FormatFloat(memUsed, 'f', -1, 64)),
+			zap.String("maxMemUsedPercent", strconv.FormatFloat(maxMemUsedPercent, 'f', -1, 64)))
 		return base.NewResultBlock(fmt.Sprintf("RunStatus.MemUsedPercent:%f > MaxMemUsedPercent:%f", memUsed, maxMemUsedPercent))
 	}
 	return base.NewResultPass()

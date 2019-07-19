@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/sentinel-group/sentinel-golang/core"
 	"github.com/sentinel-group/sentinel-golang/core/slots/base"
+	"github.com/sentinel-group/sentinel-golang/core/system"
 	"log"
 	"math/rand"
 	"net/http"
@@ -17,6 +18,12 @@ func main() {
 		log.Println(http.ListenAndServe("localhost:10000", nil))
 	}()
 
+	rule := system.SystemRule{
+		MaxGoroutine:      19,
+		MaxMemUsedPercent: 69.0,
+		MaxCpuUsedPercent: 69.0,
+	}
+	system.LoadRules(rule)
 	wg := &sync.WaitGroup{}
 
 	for a := 0; a < 100000; a++ {
