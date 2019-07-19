@@ -9,6 +9,7 @@ import (
 	"github.com/sentinel-group/sentinel-golang/core/slots/cluster"
 	"github.com/sentinel-group/sentinel-golang/core/slots/flow"
 	"github.com/sentinel-group/sentinel-golang/core/statistic"
+	"github.com/sentinel-group/sentinel-golang/core/system"
 	"github.com/sentinel-group/sentinel-golang/core/util"
 )
 
@@ -18,8 +19,9 @@ type DefaultSlotChainBuilder struct {
 func (dsc *DefaultSlotChainBuilder) Build() chain.SlotChain {
 	linkedChain := chain.NewLinkedSlotChain()
 	linkedChain.AddLast(new(cluster.ClusterBuilderSlot))
-	linkedChain.AddLast(new(flow.FlowSlot))
 	linkedChain.AddLast(new(statistic.StatisticSlot))
+	linkedChain.AddLast(new(flow.FlowSlot))
+	linkedChain.AddLast(new(system.SystemSlot))
 	// add all slot
 	return linkedChain
 }

@@ -50,13 +50,12 @@ func (la *LeapArray) CurrentWindowWithTime(timeMillis uint64, sw BucketGenerator
 	for {
 		old := la.array[idx]
 		if old == nil {
-			newWrap := &WindowWrap{
-				windowLengthInMs: la.windowLengthInMs,
-				windowStart:      windowStart,
-				value:            sw.newEmptyBucket(windowStart),
-			}
-			if la.mux.TryLock() && la.array[idx] == nil {
-				la.array[idx] = newWrap
+			if la.mux.TryLock() {
+				la.array[idx] = &WindowWrap{
+					windowLengthInMs: la.windowLengthInMs,
+					windowStart:      windowStart,
+					value:            sw.newEmptyBucket(windowStart),
+				}
 				la.mux.Unlock()
 				return la.array[idx], nil
 			} else {

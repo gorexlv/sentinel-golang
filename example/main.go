@@ -25,13 +25,11 @@ func main() {
 			go test(wg, "test1")
 		}
 
-		//for j := 0; j < 10; j++ {
-		//	wg.Add(1)
-		//	go test(wg,"test2")
-		//}
+		for j := 0; j < 10; j++ {
+			wg.Add(1)
+			go test(wg, "test2")
+		}
 		wg.Wait()
-
-		fmt.Println("done")
 	}
 }
 
