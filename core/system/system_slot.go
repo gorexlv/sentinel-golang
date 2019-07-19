@@ -14,9 +14,9 @@ import (
 
 // default value
 const (
-	MaxGoroutine      = uint64(15)
-	MaxMemUsedPercent = float64(95.0)
-	MaxCpuUsedPercent = float64(95.0)
+	MaxGoroutine      = uint64(2000)
+	MaxMemUsedPercent = float64(99.9)
+	MaxCpuUsedPercent = float64(99.9)
 )
 
 func init() {
@@ -129,13 +129,13 @@ func checkSystem(_ *base.ResourceWrapper) *base.TokenResult {
 	}
 	// cpu 使用率,这里等会等改成异步获取
 	curCpuUsed := RunStatus.CpuUsedPercent()
-	if curCpuUsed > MaxCpuUsedPercent {
-		return base.NewResultBlock(fmt.Sprintf("RunStatus.CpuUsedPercent:%f > MaxCpuUsedPercent:%f", curCpuUsed, MaxCpuUsedPercent))
+	if curCpuUsed > maxMemUsedPercent {
+		return base.NewResultBlock(fmt.Sprintf("RunStatus.CpuUsedPercent:%f > MaxCpuUsedPercent:%f", curCpuUsed, maxCpuUsedPercent))
 	}
 	// 内存使用率
 	memUsed := RunStatus.MemUsedPercent()
-	if memUsed > MaxMemUsedPercent {
-		return base.NewResultBlock(fmt.Sprintf("RunStatus.MemUsedPercent:%f > MaxMemUsedPercent:%f", memUsed, MaxMemUsedPercent))
+	if memUsed > maxMemUsedPercent {
+		return base.NewResultBlock(fmt.Sprintf("RunStatus.MemUsedPercent:%f > MaxMemUsedPercent:%f", memUsed, maxMemUsedPercent))
 	}
 	return base.NewResultPass()
 }

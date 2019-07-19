@@ -55,16 +55,17 @@ func Entry(ctx *context.Context, resource string) (*common.Entry, error) {
 	if result == nil {
 		panic("result is nil")
 	}
+
+	// 组装返回的 entry
+	entry := new(common.Entry)
+	entry.TokenResult = result
+	entry.SetResWrapper(resourceWrap)
+	entry.SetSlotChain(defaultChain)
+
 	if result.Status == base.ResultStatusBlocked {
-		if e := defaultChain.Exit(nil, resourceWrap, 1); e != nil {
+		if e := entry.Exit(); e != nil {
 			fmt.Println(e.Error())
 		}
 	}
-
-	// 组装返回的 token
-	token := new(common.Entry)
-	token.TokenResult = result
-	token.SetResWrapper(resourceWrap)
-	token.SetSlotChain(defaultChain)
-	return token, nil
+	return entry, nil
 }

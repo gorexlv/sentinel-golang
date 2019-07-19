@@ -2,6 +2,7 @@ package statistic
 
 import (
 	"errors"
+	"fmt"
 	"github.com/sentinel-group/sentinel-golang/core/context"
 	"github.com/sentinel-group/sentinel-golang/core/node"
 	"github.com/sentinel-group/sentinel-golang/core/slots/base"
@@ -65,10 +66,13 @@ func (fs *StatisticSlot) Exit(ctx *context.Context, resWrapper *base.ResourceWra
 	if defaultNode == nil {
 		panic("DefaultNode is nil")
 	}
-	rt := resWrapper.CreateTime() - resWrapper.EndTime()
+
+	rt := resWrapper.EndTime() - resWrapper.CreateTime()
+	if rt > 100 {
+		fmt.Printf("rt:%d !!!!!!!!!!!!!!!!!!!", rt)
+	}
 
 	defaultNode.AddRtAndSuccess(rt, 1)
 	defaultNode.DecreaseGoroutineNum()
-
 	return fs.FireExit(ctx, resWrapper, count)
 }

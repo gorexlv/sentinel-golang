@@ -34,21 +34,23 @@ func main() {
 }
 
 func test(wg *sync.WaitGroup, res string) {
-	r := rand.Uint32() % 10
-	time.Sleep(time.Duration(r) * time.Millisecond)
-	result, e := core.Entry(nil, res)
+	entry, e := core.Entry(nil, res)
 	if e != nil {
 		fmt.Println(e.Error())
 		return
 	}
-	if result.Status == base.ResultStatusBlocked {
-		fmt.Println("reason:", result.BlockedReason)
+
+	r := rand.Uint32() % 10
+	time.Sleep(time.Duration(r) * time.Millisecond)
+
+	if entry.Status == base.ResultStatusBlocked {
+		fmt.Println("reason:", entry.BlockedReason)
 	}
-	if result.Status == base.ResultStatusError {
-		fmt.Println("reason:", result.ErrorMsg)
+	if entry.Status == base.ResultStatusError {
+		fmt.Println("reason:", entry.ErrorMsg)
 	}
-	if result.Status == base.ResultStatusPass {
-		_ = result.Exit()
+	if entry.Status == base.ResultStatusPass {
+		_ = entry.Exit()
 	}
 	wg.Done()
 }
