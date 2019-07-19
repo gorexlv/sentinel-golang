@@ -3,33 +3,40 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/sentinel-group/sentinel-golang/core/slog"
 	"github.com/sentinel-group/sentinel-golang/core/slots/cluster"
+	"go.uber.org/zap"
 	"time"
 )
 
 func init() {
+	metricToLog()
+}
 
+func metricToLog() {
 	go func() {
 		defer func() {
 			e := recover()
-			fmt.Println(e)
+			slog.GetLog(slog.Record).Error("metricToLog error", zap.Any("e", e))
 		}()
 		for {
 			time.Sleep(time.Second)
 			nodeMap := cluster.StrResNodeMap()
+			var allResInfo string
 			for strRes, defNode := range nodeMap {
 				metrics := defNode.Metrics()
-				mts := fmt.Sprintf("res:%s,", strRes)
-				for _, me := range metrics {
-					bytes, e := json.Marshal(*me)
+				oneResMts := fmt.Sprintf("ResName:%s,", strRes)
+				for _, oneMetric := range metrics {
+					bytes, e := json.Marshal(*oneMetric)
 					if e != nil {
 						panic(e)
 					}
-					meStr := string(bytes)
-					mts = mts + meStr
+					oneMeStr := string(bytes)
+					oneResMts = oneResMts + oneMeStr
 				}
-				fmt.Println(mts)
+				allResInfo = allResInfo + oneResMts + "||"
 			}
+			slog.GetLog(slog.MetricLog).Info(allResInfo)
 		}
 	}()
 }

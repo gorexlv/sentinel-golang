@@ -29,7 +29,6 @@ func TestStatisticSlot_Entry(t *testing.T) {
 			go testEntry(slot, wg, "test2", defaultNode2)
 		}
 		wg.Wait()
-		fmt.Println("done")
 	}
 
 }

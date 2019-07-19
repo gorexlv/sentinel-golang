@@ -3,6 +3,7 @@ package system
 import (
 	"fmt"
 	"github.com/sentinel-group/sentinel-golang/core/context"
+	"github.com/sentinel-group/sentinel-golang/core/slog"
 	"github.com/sentinel-group/sentinel-golang/core/slots/base"
 	"github.com/sentinel-group/sentinel-golang/core/slots/chain"
 	"github.com/shirou/gopsutil/cpu"
@@ -24,12 +25,12 @@ func init() {
 		for {
 			cpuUsed, e := CpuUsed(time.Second)
 			if e != nil {
-				fmt.Println(e.Error())
+				slog.GetLog(slog.Record).Error(e.Error())
 			}
 			r.SetCpuUsedPercent(cpuUsed)
 			memUsed, e := MemUsed()
 			if e != nil {
-				fmt.Println(e.Error())
+				slog.GetLog(slog.Record).Error(e.Error())
 			}
 			r.SetMemUsedPercent(memUsed)
 

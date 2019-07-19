@@ -1,11 +1,12 @@
 package cluster
 
 import (
-	"fmt"
 	"github.com/sentinel-group/sentinel-golang/core/context"
 	"github.com/sentinel-group/sentinel-golang/core/node"
+	"github.com/sentinel-group/sentinel-golang/core/slog"
 	"github.com/sentinel-group/sentinel-golang/core/slots/base"
 	"github.com/sentinel-group/sentinel-golang/core/slots/chain"
+	"go.uber.org/zap"
 	"sync"
 )
 
@@ -42,7 +43,7 @@ func (fs *ClusterBuilderSlot) Entry(ctx *context.Context, resWrapper *base.Resou
 		newNode := node.NewDefaultNode()
 		actual, loaded := strResNodeMap.LoadOrStore(resWrapper.ResourceName, newNode)
 		if !loaded {
-			fmt.Println("new node add to strResNodeMap")
+			slog.GetLog(slog.Record).Info("new node add to map", zap.String("resource", resWrapper.ResourceName))
 		}
 		defaultNode = actual
 	}

@@ -3,6 +3,8 @@ package data
 import (
 	"fmt"
 	"github.com/sentinel-group/sentinel-golang/core/model"
+	"github.com/sentinel-group/sentinel-golang/core/slog"
+	"go.uber.org/zap"
 	"math"
 	"sync/atomic"
 )
@@ -95,14 +97,13 @@ func (sw *SlidingWindow) resetWindowTo(ww *WindowWrap, startTime uint64) (*Windo
 func (sw *SlidingWindow) Count(event MetricEventType) uint64 {
 	_, err := sw.data.CurrentWindow(sw)
 	if err != nil {
-		fmt.Println("sliding window fail to record success,error")
+		slog.GetLog(slog.Record).Error("get current window", zap.Error(err))
 	}
 	count := uint64(0)
 	for _, ww := range sw.data.Values() {
 		mb, ok := ww.value.(*MetricBucket)
 		if !ok {
-			fmt.Println("assert fail")
-			continue
+			panic("value is not type *MetricBucket")
 		}
 		count += mb.Get(event)
 	}
@@ -112,14 +113,13 @@ func (sw *SlidingWindow) Count(event MetricEventType) uint64 {
 func (sw *SlidingWindow) AddCount(event MetricEventType, count uint64) {
 	curWindow, err := sw.data.CurrentWindow(sw)
 	if err != nil || curWindow == nil || curWindow.value == nil {
-		fmt.Println("sliding window fail to record success")
+		slog.GetLog(slog.Record).Error("sliding window fail to record success")
 		return
 	}
 
 	mb, ok := curWindow.value.(*MetricBucket)
 	if !ok {
-		fmt.Println("assert fail")
-		return
+		panic("value is not type *MetricBucket")
 	}
 	mb.Add(event, count)
 }
@@ -127,19 +127,18 @@ func (sw *SlidingWindow) AddCount(event MetricEventType, count uint64) {
 func (sw *SlidingWindow) MaxSuccess() uint64 {
 	_, err := sw.data.CurrentWindow(sw)
 	if err != nil {
-		fmt.Println("sliding window fail to record success")
+		slog.GetLog(slog.Record).Error("get current window", zap.Error(err))
 	}
 
 	succ := uint64(0)
 	for _, ww := range sw.data.Values() {
 		mb, ok := ww.value.(*MetricBucket)
 		if !ok {
-			fmt.Println("assert fail")
-			continue
+			panic("value is not type *MetricBucket")
 		}
 		s := mb.Get(MetricEventSuccess)
 		if err != nil {
-			fmt.Println("get success counter fail, reason: ", err)
+			slog.GetLog(slog.Record).Error("mb is not *MetricBucket")
 		}
 		succ = uint64(math.Max(float64(succ), float64(s)))
 	}
@@ -149,20 +148,16 @@ func (sw *SlidingWindow) MaxSuccess() uint64 {
 func (sw *SlidingWindow) MinSuccess() uint64 {
 	_, err := sw.data.CurrentWindow(sw)
 	if err != nil {
-		fmt.Println("sliding window fail to record success")
+		slog.GetLog(slog.Record).Error(err.Error())
 	}
 
 	succ := uint64(math.MaxUint64)
 	for _, ww := range sw.data.Values() {
 		mb, ok := ww.value.(*MetricBucket)
 		if !ok {
-			fmt.Println("assert fail")
-			continue
+			panic("value is not type *MetricBucket")
 		}
 		s := mb.Get(MetricEventSuccess)
-		if err != nil {
-			fmt.Println("get success counter fail, reason: ", err)
-		}
 		if s < succ {
 			succ = s
 		}
@@ -173,15 +168,14 @@ func (sw *SlidingWindow) MinSuccess() uint64 {
 func (sw *SlidingWindow) MinRt() uint64 {
 	_, err := sw.data.CurrentWindow(sw)
 	if err != nil {
-		fmt.Println("sliding window fail to record success")
+		slog.GetLog(slog.Record).Error("get current window", zap.Error(err))
 	}
 
 	min := uint64(math.MaxUint64)
 	for _, ww := range sw.data.Values() {
 		mb, ok := ww.value.(*MetricBucket)
 		if !ok {
-			fmt.Println("assert fail")
-			continue
+			panic("value is not type *MetricBucket")
 		}
 		s := mb.MinRt()
 		if s < min {

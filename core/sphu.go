@@ -1,9 +1,9 @@
 package core
 
 import (
-	"fmt"
 	"github.com/sentinel-group/sentinel-golang/core/common"
 	"github.com/sentinel-group/sentinel-golang/core/context"
+	"github.com/sentinel-group/sentinel-golang/core/slog"
 	"github.com/sentinel-group/sentinel-golang/core/slots/base"
 	"github.com/sentinel-group/sentinel-golang/core/slots/chain"
 	"github.com/sentinel-group/sentinel-golang/core/slots/cluster"
@@ -11,6 +11,7 @@ import (
 	"github.com/sentinel-group/sentinel-golang/core/statistic"
 	"github.com/sentinel-group/sentinel-golang/core/system"
 	"github.com/sentinel-group/sentinel-golang/core/util"
+	"go.uber.org/zap"
 )
 
 type DefaultSlotChainBuilder struct {
@@ -50,7 +51,7 @@ func Entry(ctx *context.Context, resource string) (*common.Entry, error) {
 
 	result, e := defaultChain.Entry(ctx, resourceWrap, 1, false)
 	if e != nil {
-		fmt.Println(e.Error())
+		slog.GetLog(slog.Record).Error(e.Error(), zap.String("resource", resourceWrap.ResourceName))
 	}
 	if result == nil {
 		panic("result is nil")
@@ -64,7 +65,7 @@ func Entry(ctx *context.Context, resource string) (*common.Entry, error) {
 
 	if result.Status == base.ResultStatusBlocked {
 		if e := entry.Exit(); e != nil {
-			fmt.Println(e.Error())
+			slog.GetLog(slog.Record).Error(e.Error(), zap.String("resource", resourceWrap.ResourceName))
 		}
 	}
 	return entry, nil
