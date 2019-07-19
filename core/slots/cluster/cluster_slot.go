@@ -43,7 +43,7 @@ func (fs *ClusterBuilderSlot) Entry(ctx *context.Context, resWrapper *base.Resou
 		newNode := node.NewDefaultNode()
 		actual, loaded := strResNodeMap.LoadOrStore(resWrapper.ResourceName, newNode)
 		if !loaded {
-			slog.GetLog(slog.Record).Info("new node add to map", zap.String("resource", resWrapper.ResourceName))
+			slog.GetLog(slog.Record).Info("new node add to global map", zap.String("resource", resWrapper.ResourceName))
 		}
 		defaultNode = actual
 	}
