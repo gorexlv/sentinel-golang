@@ -1,7 +1,6 @@
 package statistic
 
 import (
-	"fmt"
 	"github.com/sentinel-group/sentinel-golang/core/node"
 	"github.com/sentinel-group/sentinel-golang/core/slots/base"
 	"math/rand"
