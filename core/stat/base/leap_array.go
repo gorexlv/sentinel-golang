@@ -49,7 +49,7 @@ type atomicBucketWrapArray struct {
 }
 
 // New atomicBucketWrapArray with initializing field data
-// Default, automatically initialize each bucketWrap
+// Base, automatically initialize each bucketWrap
 // len: length of array
 // bucketLengthInMs: bucket length of bucketWrap
 // generator: generator to generate bucket

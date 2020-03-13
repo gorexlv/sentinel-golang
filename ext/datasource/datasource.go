@@ -7,43 +7,6 @@ import (
 	"sync"
 )
 
-type Base struct {
-	handlers []PropertyHandler
-	decoderBuild func(io.Reader) Decoder
-
-	initOnce sync.Once
-}
-
-func (s *Base) SetDecoderBuilder(decoderBuild DecoderBuilder) {
-	s.decoderBuild = decoderBuild
-}
-
-func (s *Base) init() {
-	s.handlers = make([]PropertyHandler, 0)
-	if s.decoderBuild == nil {
-		// default decoder builder
-		s.decoderBuild = func(reader io.Reader) Decoder {
-			return json.NewDecoder(reader)
-		}
-	}
-}
-
-func (s *Base) AddPropertyHandler(h PropertyHandler) {
-	s.initOnce.Do(s.init)
-	s.handlers = append(s.handlers, h)
-}
-
-func (s Base) Handle(src []byte) error {
-	s.initOnce.Do(s.init)
-	for _, h := range s.handlers {
-		decoder := s.decoderBuild(bytes.NewBuffer(src))
-		if err := h(decoder); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // The generic interface to describe the datasource
 // Each DataSource instance listen in one property type.
 type DataSource interface {
@@ -58,3 +21,59 @@ type DataSource interface {
 	// Close the data source.
 	io.Closer
 }
+
+type (
+	// 从数据源配置构建一个解码器
+	DecoderBuilder func(io.Reader) Decoder
+	// 延迟到数据源配置Handler中执行解码
+	PropertyHandler func(Decoder) error
+	Decoder interface {
+		Decode(interface{}) error
+	}
+)
+
+type Base struct {
+	handlers     []PropertyHandler
+	buildDecoder func(io.Reader) Decoder
+
+	initOnce sync.Once
+}
+
+// SetDecoderBuilder reset datasource decoder's build method
+// json.NewDecoder as default.
+// You can set your own decoder builder to decode multi-rules
+// or another data format like hcl/toml, by:
+// datasourceInstance.SetDecoderBuilder(func(reader io.Reader) Decoder {
+// 		return toml.NewDecoder(reader)
+// }
+// this can be called by biz user, datasource provider.
+func (s *Base) SetDecoderBuilder(builder DecoderBuilder) {
+	s.buildDecoder = builder
+}
+
+func (s *Base) AddPropertyHandler(h PropertyHandler) {
+	s.initOnce.Do(s.init)
+	s.handlers = append(s.handlers, h)
+}
+
+func (s Base) Handle(src []byte) error {
+	s.initOnce.Do(s.init)
+	for _, h := range s.handlers {
+		decoder := s.buildDecoder(bytes.NewBuffer(src))
+		if err := h(decoder); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Base) init() {
+	s.handlers = make([]PropertyHandler, 0)
+	if s.buildDecoder == nil {
+		// default decoder builder
+		s.buildDecoder = func(reader io.Reader) Decoder {
+			return json.NewDecoder(reader)
+		}
+	}
+}
+

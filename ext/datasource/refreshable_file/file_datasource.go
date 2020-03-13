@@ -1,7 +1,9 @@
 package refreshable_file
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"sync"
@@ -27,6 +29,10 @@ func FileDataSourceStarter(sourceFilePath string) *RefreshableFileDataSource {
 	ds := &RefreshableFileDataSource{
 		sourceFilePath: sourceFilePath,
 	}
+	// json decoder as default
+	ds.SetDecoderBuilder(func(reader io.Reader) datasource.Decoder {
+		return json.NewDecoder(reader)
+	})
 	return ds
 }
 
