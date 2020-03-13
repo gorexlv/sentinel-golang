@@ -1,9 +1,11 @@
 package datasource
 
 import (
+	"io"
+	"reflect"
+
 	"github.com/alibaba/sentinel-golang/logging"
 	"github.com/pkg/errors"
-	"reflect"
 )
 
 var logger = logging.GetDefaultLogger()
@@ -18,12 +20,22 @@ type PropertyConverter func(src []byte) (interface{}, error)
 // return nil if succeed to update, if not, return the error.
 type PropertyUpdater func(data interface{}) error
 
-type PropertyHandler interface {
-	// check whether the current src is consistent with last update property
-	isPropertyConsistent(src interface{}) bool
-	// handle the current property
-	Handle(src []byte) error
+// type PropertyHandler interface {
+// 	// check whether the current src is consistent with last update property
+// 	isPropertyConsistent(src interface{}) bool
+// 	// handle the current property
+// 	Handle(src []byte) error
+// }
+
+type PropertyHandler func(Decoder) error
+
+type Decoder interface {
+	Decode(interface{}) error
 }
+
+type (
+	DecoderBuilder func(io.Reader) Decoder
+)
 
 // DefaultPropertyHandler encapsulate the Converter and updater of property.
 // One DefaultPropertyHandler instance is to handle one property type.

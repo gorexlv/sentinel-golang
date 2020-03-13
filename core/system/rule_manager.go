@@ -2,10 +2,11 @@ package system
 
 import (
 	"encoding/json"
+	"sync"
+
 	"github.com/alibaba/sentinel-golang/logging"
 	"github.com/alibaba/sentinel-golang/util"
 	"github.com/pkg/errors"
-	"sync"
 )
 
 type RuleMap map[MetricType][]*SystemRule
@@ -53,9 +54,9 @@ func GetRules() []*SystemRule {
 }
 
 // LoadRules loads given system rules to the rule manager, while all previous rules will be replaced.
-func LoadRules(rules []*SystemRule) (bool, error) {
+func LoadRules(rules []*SystemRule) error {
 	ruleChan <- rules
-	return true, nil
+	return nil
 }
 
 func onRuleUpdate(rules []*SystemRule) error {
